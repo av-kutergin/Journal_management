@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.0-beta1/css/bootstrap.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.7.4/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.js"></script>
+</head>
+<body>
+
+{% verbatim %}
+
+<div class="container" id="photos_app">
+    <div class="btn btn-success btn-lg" v-for="photo in photos">
+        Description: {{ photo.description }}
+    </br>
+        Name: {{ photo.photo_name }}
+    </div>
+
+</div>
+
+{% endverbatim %}
+
+<script src="/static/app.js"></script>
+</body>
+</html>

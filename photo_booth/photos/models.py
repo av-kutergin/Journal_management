@@ -2,9 +2,9 @@ from django.contrib.auth.models import User
 from django.contrib import admin
 from django.db import models
 
+
 class Photo(models.Model):
     photo_name = models.CharField(max_length=255, default=None)
     description = models.CharField(max_length=255)
-    photo_url = models.ImageField()
-    display = models.BooleanField()
-    creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, default=admin)
+    display = models.BooleanField(default=True)
+    creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, default=1)
