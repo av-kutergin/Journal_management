@@ -15,7 +15,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from rest_framework.routers import SimpleRouter
+
+from photos.views import photo_page, PhotoView, photos_app
+
+router = SimpleRouter()
+
+router.register('api/photos', PhotoView)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', photo_page),
+    path('photos_page/', photos_app),
 ]
+
+urlpatterns += router.urls
