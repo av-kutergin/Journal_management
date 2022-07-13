@@ -1,8 +1,6 @@
 <!DOCTYPE html>
-{% load static %}
 <html lang="en">
 <head>
-    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" type="image/png">
     <meta charset="UTF-8">
     <title>Cities!</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.0-beta1/css/bootstrap.css"/>
@@ -17,36 +15,30 @@ background: -webkit-linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 11
 /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1))
 }
-
     </style>
 </head>
 <body>
 <section class="vh-100 gradient-custom">
-    <div class="container py-5 h-100">
-        <div class="row d-flex justify-content-center align-items-center h-100">
-            <div class="col-12 col-md-8 col-lg-6 col-xl-5">
-                <div class="card bg-dark text-white" style="border-radius: 1rem;">
-                    <div class="card-body p-5 text-center">
+  <div class="container py-5 h-100">
+    <div class="row d-flex justify-content-center align-items-center h-100">
+      <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+        <div class="card bg-dark text-white" style="border-radius: 1rem;">
+          <div class="card-body p-5 text-center">
 
-                        <div class="md-5 mt-md-4 pb-5">
+            <div class="mb-md-5 mt-md-4 pb-5">
 
-                            <div class="d-grid gap-2">
-                                {% if message %}
-                                {{message}}
-                                {% endif %}
-                                {% for city in cities_set %}
-                                <a href="{{ city.get_absolute_url }}" class="btn btn-outline-light btn-lg px-5 my-2"
-                                   type="button">{{city.city_name}}</a>
-                                {% endfor %}
-                            </div>
-                            <p class="small pb-lg-2 mt-5"><a class="text-white-50" href="/manage/logout">Другой
-                                пользователь</a></p>
-                        </div>
-                    </div>
+                <div class="d-grid gap-2">
+                    {% for city in cities_set %}
+                        <a href="{% url 'journal' %}" class="btn btn-outline-light btn-lg px-5 my-2" type="button">{{city.city_name}}</a>
+                    {% endfor %}
                 </div>
+
             </div>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 </section>
 </body>
 </html>
