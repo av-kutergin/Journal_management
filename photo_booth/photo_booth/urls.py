@@ -17,19 +17,15 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from rest_framework.routers import SimpleRouter
 
-from photos.views import photo_page, PhotoView, photos_app
-
-router = SimpleRouter()
-
-router.register('api/photos', PhotoView)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('photos.urls')),
 ]
 
-# urlpatterns += router.urls
+urlpatterns += [
+    path('', include('django.contrib.auth.urls')),
+]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
