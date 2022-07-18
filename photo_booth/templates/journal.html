@@ -25,9 +25,14 @@ background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 
         <div class="card bg-dark text-white" style="border-radius: 1rem;">
           <div class="card-body p-5 text-center">
 
-            <div class="mb-md-5 mt-md-4 pb-5">
+            <div class="md-5 mt-md-4 pb-5">
 
                 <div class="d-grid gap-2">
+                    {% if success %}
+                    <p class="fw-bold mb-mt-2 text-uppercase">{{ success }}</p>
+                    {% endif %}
+                    <p class="fw-bold mb-mt-2">{{ current }}</p>
+                    <p>{{ message }}</p>
                     <form action="" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
 
@@ -41,7 +46,8 @@ background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 
                     </div>
 
                     </form>
-                    <p class="small mb-5 pb-lg-2"><a class="text-white-50" href="/cities">Back to city selection</a></p>
+                    <p class="small pb-lg-2"><a class="text-white-50" href="/cities">Back to city selection</a></p>
+                    <p class="small pb-lg-2"><a class="text-white-50" href="/logout">Log out</a></p>
                 </div>
 
             </div>
