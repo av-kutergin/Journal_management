@@ -25,14 +25,17 @@ background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 
         <div class="card bg-dark text-white" style="border-radius: 1rem;">
           <div class="card-body p-5 text-center">
 
-            <div class="mb-md-5 mt-md-4 pb-5">
+            <div class="md-5 mt-md-4 pb-5">
 
                 <div class="d-grid gap-2">
+                    {% if message %}
+                    {{message}}
+                    {% endif %}
                     {% for city in cities_set %}
-                        <a href="{% url 'journal' %}" class="btn btn-outline-light btn-lg px-5 my-2" type="button">{{city.city_name}}</a>
+                        <a href="{{ city.get_absolute_url }}" class="btn btn-outline-light btn-lg px-5 my-2" type="button">{{city.city_name}}</a>
                     {% endfor %}
                 </div>
-
+                    <p class="small pb-lg-2 mt-5"><a class="text-white-50" href="/logout">Log out</a></p>
             </div>
           </div>
         </div>
