@@ -38,19 +38,25 @@ background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 
                         <p>{{ message }}</p>
                     <form action="" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
+                      <div class="form-group mb-3" data-upload-id="myImage">
+                      <label for="formFile" class="form-label my-3">Upload new photo:</label>
+                          <input name="image" class="form-control" type="file" accept="image/*" onchange="loadFile(event)">
+                          <br>
+                          <p><img id="output" width="400"/></p>
+                          <script>
+                              var loadFile = function(event) {
+                                  var image = document.getElementById('output');
+                                  image.src=URL.createObjectURL(event.target.files[0]);
+                              };
+                          </script>
 
-                    <div class="form-group mb-3" data-upload-id="myImage">
-                      <label for="formFile" class="form-label my-3">Upload new photo</label>
-                      <input required name="image" class="form-control" type="file" id="formFile">
-                    </div>
-
-                    <script>
-                    document.addEventListener("DOMContentLoaded", function () {
-                        document.querySelector("input.form-control").addEventListener('change', function () {
-                             document.querySelector('.btn-submit').removeAttribute('disabled')
-                        });
-                    });
-                    </script>
+                            <script>
+                            document.addEventListener("DOMContentLoaded", function () {
+                                document.querySelector("input.form-control").addEventListener('change', function () {
+                                     document.querySelector('.btn-submit').removeAttribute('disabled')
+                                });
+                            });
+                            </script>
 
                     <div class="col-auto">
                         <button type="submit" class="btn-submit btn btn-outline-light btn-lg px-5 my-2" disabled>Submit</button>
