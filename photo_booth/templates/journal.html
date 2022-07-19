@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Journal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.0-beta1/css/bootstrap.css"/>
+    <script src="https://unpkg.com/file-upload-with-preview@3.4.3/dist/file-upload-with-preview.min.js"></script>
     <style>
         .gradient-custom {
 /* fallback for old browsers */
@@ -28,21 +29,31 @@ background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 
             <div class="md-5 mt-md-4 pb-5">
 
                 <div class="d-grid gap-2">
-                    {% if success %}
-                    <p class="fw-bold mb-mt-2 text-uppercase">{{ success }}</p>
+                    {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-dark {% if message.tags %}alert-{{ message.tags }}{% endif %}" role="alert">{{ message }}</div>
+                    {% endfor %}
                     {% endif %}
                     <p class="fw-bold mb-mt-2">{{ current }}</p>
-                    <p>{{ message }}</p>
+                        <p>{{ message }}</p>
                     <form action="" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
 
-                    <div class="form-group mb-3">
+                    <div class="form-group mb-3" data-upload-id="myImage">
                       <label for="formFile" class="form-label my-3">Upload new photo</label>
                       <input required name="image" class="form-control" type="file" id="formFile">
                     </div>
 
+                    <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                        document.querySelector("input.form-control").addEventListener('change', function () {
+                             document.querySelector('.btn-submit').removeAttribute('disabled')
+                        });
+                    });
+                    </script>
+
                     <div class="col-auto">
-                        <button type="submit" class="btn btn-outline-light btn-lg px-5 my-2">Submit</button>
+                        <button type="submit" class="btn-submit btn btn-outline-light btn-lg px-5 my-2" disabled>Submit</button>
                     </div>
 
                     </form>
