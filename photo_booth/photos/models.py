@@ -3,15 +3,6 @@ from django.db import models
 from django.urls import reverse
 
 
-# class User(User):
-#     class Meta:
-#         verbose_name = 'Пользователь'
-#         verbose_name_plural = 'Пользователи'
-#
-#     def __str__(self):
-#         return self.username
-
-
 class City(models.Model):
     city_name = models.CharField(max_length=20, db_index=True, verbose_name='Город')
     operators = models.ManyToManyField(User, verbose_name='Оператор', related_name='cities')
