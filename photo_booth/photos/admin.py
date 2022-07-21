@@ -1,18 +1,20 @@
 from django.contrib import admin
-from .models import User, JournalPhoto, Journals, Cities
+from .models import User, Photo, Journal, City
 
 
-class UsersAdmin(admin.ModelAdmin):
-    list_display = ('id', 'username', 'get_cities')
-    list_display_links = ('username',)
+# class UsersAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'username', 'get_cities')
+#     list_display_links = ('username',)
+#
+#     def get_cities(self, obj):
+#         return [c.city_name for c in City.objects.filter(operators=obj.id)]
+#
+#     get_cities.short_description = 'Города'
 
-    def get_cities(self, obj):
-        return [c.city_name for c in Cities.objects.filter(operators=obj.id)]
-
-    get_cities.short_description = 'Города'
 
 
-class CitiesAdmin(admin.ModelAdmin):
+
+class CityAdmin(admin.ModelAdmin):
     list_display = ('id', 'city_name', 'city_operators')
     list_display_links = ('city_name',)
 
@@ -22,24 +24,24 @@ class CitiesAdmin(admin.ModelAdmin):
     city_operators.short_description = 'Операторы'
 
 
-class JournalsAdmin(admin.ModelAdmin):
-    list_display = ('id', 'journal_name', 'journal_city', 'journal_owner', 'journal_plenum', 'time_create')
+class JournalAdmin(admin.ModelAdmin):
+    list_display = ('id', 'journal_name', 'journal_city', 'journal_owner', 'filled_pages', 'total_pages', 'time_create')
     list_display_links = ('id',)
     list_filter = ('journal_city', 'journal_owner', 'time_create')
 
 
-class PhotosAdmin(admin.ModelAdmin):
-    list_display = ('id', 'j_photo_name', 'j_photo_number', 'j_photo_journal', 'journal', 'j_photo_image')
+class PhotoAdmin(admin.ModelAdmin):
+    list_display = ('id', 'photo_name', 'journal', 'page_in_journal', 'photo_image')
     list_display_links = ('id',)
 
     def journal(self, obj):
-        return obj.j_photo_journal.journal_city
+        return obj.journal.journal_city
 
-    journal.admin_order_field = 'j_photo_journal__journal_city'
+    journal.admin_order_field = 'journal__journal_city'
     journal.short_description = 'Город'
 
 
-admin.site.register(User, UsersAdmin)
-admin.site.register(JournalPhoto, PhotosAdmin)
-admin.site.register(Journals, JournalsAdmin)
-admin.site.register(Cities, CitiesAdmin)
+# admin.site.register(User, UsersAdmin)
+admin.site.register(Photo, PhotoAdmin)
+admin.site.register(Journal, JournalAdmin)
+admin.site.register(City, CityAdmin)
