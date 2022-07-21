@@ -2,18 +2,6 @@ from django.contrib import admin
 from .models import User, Photo, Journal, City
 
 
-# class UsersAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'username', 'get_cities')
-#     list_display_links = ('username',)
-#
-#     def get_cities(self, obj):
-#         return [c.city_name for c in City.objects.filter(operators=obj.id)]
-#
-#     get_cities.short_description = 'Города'
-
-
-
-
 class CityAdmin(admin.ModelAdmin):
     list_display = ('id', 'city_name', 'city_operators')
     list_display_links = ('city_name',)
@@ -40,8 +28,6 @@ class PhotoAdmin(admin.ModelAdmin):
     journal.admin_order_field = 'journal__journal_city'
     journal.short_description = 'Город'
 
-
-# admin.site.register(User, UsersAdmin)
 admin.site.register(Photo, PhotoAdmin)
 admin.site.register(Journal, JournalAdmin)
 admin.site.register(City, CityAdmin)
