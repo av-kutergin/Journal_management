@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
-from photos.models import Cities, JournalPhoto, Journals
+from photos.models import City, Photo, Journal
 
 
 def main_page(request):
@@ -14,7 +14,7 @@ def main_page(request):
 
 
 def cities_selection(request):
-    available_cities = Cities.objects.filter(operators=request.user.id)
+    available_cities = City.objects.filter(operators=request.user.id)
     context = {
         'cities_set': available_cities,
     }
@@ -26,9 +26,9 @@ def cities_selection(request):
 
 
 def get_journals(request, city_id):
-    city = Cities.objects.get(id=city_id)
+    city = City.objects.get(id=city_id)
     user = User.objects.get(id=request.user.pk)
-    journals = Journals.objects.filter(journal_city=city).filter(journal_owner=user)
+    journals = Journal.objects.filter(journal_city=city).filter(journal_owner=user)
     message = f"You have {len(journals)} journals."
     last_journal = None
 
@@ -39,7 +39,7 @@ def get_journals(request, city_id):
 
     if journals:
         last_journal = journals.latest('time_create')
-        last_journal_photos = JournalPhoto.objects.filter(j_photo_journal=last_journal.id)
+        last_journal_photos = Photo.objects.filter(journal=last_journal.id)
         context['message'] += f" Current journal has {len(last_journal_photos)} photos in it."
         if len(last_journal_photos) == last_journal.total_pages:
             last_journal = None
@@ -47,18 +47,14 @@ def get_journals(request, city_id):
     if request.method == "POST":
         image = request.FILES.get('image')
         if not last_journal:
-            last_journal = Journals.objects.create(
+            last_journal = Journal.objects.create(
                 journal_city=city,
                 journal_owner_id=user.id,
                 time_create=datetime.now(),
-                journal_name='',
-                total_pages=3,
-                journal_plenum=0,
             )
-            last_journal.journal_name = f'JR-{last_journal.id}'
-        new_photo = JournalPhoto.objects.create(
-            j_photo_journal=last_journal,
-            j_photo_image=image,
+        new_photo = Photo.objects.create(
+            journal=last_journal,
+            photo_image=image,
             time_create=datetime.now(),
         )
 
