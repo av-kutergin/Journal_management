@@ -41,7 +41,7 @@ def get_journals(request, city_id):
         last_journal = journals.latest('time_create')
         last_journal_photos = JournalPhoto.objects.filter(j_photo_journal=last_journal.id)
         context['message'] += f" Current journal has {len(last_journal_photos)} photos in it."
-        if len(last_journal_photos) == 3:
+        if len(last_journal_photos) == last_journal.total_pages:
             last_journal = None
 
     if request.method == "POST":
@@ -50,13 +50,21 @@ def get_journals(request, city_id):
             last_journal = Journals.objects.create(
                 journal_city=city,
                 journal_owner_id=user.id,
-                time_create=datetime.now()
+                time_create=datetime.now(),
+                journal_name='',
+                total_pages=3,
+                journal_plenum=0,
             )
-        JournalPhoto.objects.create(
+            last_journal.journal_name = f'JR-{last_journal.id}'
+        new_photo = JournalPhoto.objects.create(
             j_photo_journal=last_journal,
             j_photo_image=image,
-            time_create=datetime.now()
+            time_create=datetime.now(),
         )
+
+        last_journal.update_values()
+        new_photo.update_values()
+
         messages.info(request, 'You have successfully uploaded 1 photo')
         return redirect('journal', city_id)
 

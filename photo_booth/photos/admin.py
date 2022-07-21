@@ -23,13 +23,13 @@ class CitiesAdmin(admin.ModelAdmin):
 
 
 class JournalsAdmin(admin.ModelAdmin):
-    list_display = ('id', 'journal_city', 'journal_owner', 'time_create')
+    list_display = ('id', 'journal_name', 'journal_city', 'journal_owner', 'journal_plenum', 'time_create')
     list_display_links = ('id',)
     list_filter = ('journal_city', 'journal_owner', 'time_create')
 
 
 class PhotosAdmin(admin.ModelAdmin):
-    list_display = ('id', 'j_photo_journal', 'journal', 'j_photo_image')
+    list_display = ('id', 'j_photo_name', 'j_photo_number', 'j_photo_journal', 'journal', 'j_photo_image')
     list_display_links = ('id',)
 
     def journal(self, obj):
