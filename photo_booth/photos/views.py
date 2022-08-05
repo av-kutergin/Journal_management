@@ -10,7 +10,7 @@ from photos.models import City, Photo, Journal
 def main_page(request):
     if request.user.is_authenticated:
         return cities_selection(request)
-    return redirect('/login')
+    return redirect('/manage/login')
 
 
 def cities_selection(request):
@@ -19,7 +19,7 @@ def cities_selection(request):
         'cities_set': available_cities,
     }
     if len(available_cities) == 0:
-        context.update({'message': 'You have no cities, my friend.'})
+        context.update({'message': 'У тебя нет городов, мой друг'})
     if len(available_cities) == 1:
         return get_journals(request, available_cities[0].id)
     return render(request, 'cities.html', context)
@@ -29,18 +29,18 @@ def get_journals(request, city_id):
     city = City.objects.get(id=city_id)
     user = User.objects.get(id=request.user.pk)
     journals = Journal.objects.filter(journal_city=city).filter(journal_owner=user)
-    message = f"You have {len(journals)} journals."
+    message = f"Количество журналов: {len(journals)}."
     last_journal = None
 
     context = {
         'message': message,
-        'current': f'Current city is {city}',
+        'current': f'Текущий город: {city}',
     }
 
     if journals:
         last_journal = journals.latest('time_create')
         last_journal_photos = Photo.objects.filter(journal=last_journal.id)
-        context['message'] += f" Current journal has {len(last_journal_photos)} photos in it."
+        context['message'] += f" В текущем журнале {len(last_journal_photos)} фото."
         if len(last_journal_photos) == last_journal.total_pages:
             last_journal = None
 
@@ -61,7 +61,7 @@ def get_journals(request, city_id):
         last_journal.update_values()
         new_photo.update_values()
 
-        messages.info(request, 'You have successfully uploaded 1 photo')
+        messages.info(request, 'Удачно загружено 1 фото')
         return redirect('journal', city_id)
 
     return render(request, 'journal.html', context)
