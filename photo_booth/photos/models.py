@@ -21,7 +21,7 @@ class City(models.Model):
 
 class Journal(models.Model):
     journal_city = models.ForeignKey('City', on_delete=models.CASCADE, null=False, verbose_name='Город')
-    journal_owner = models.ForeignKey(User, on_delete=models.CASCADE, null=False, verbose_name='Оператор')
+    journal_owner = models.ForeignKey(User, on_delete=models.CASCADE, null=False, verbose_name='Оператор', default='')
     time_create = models.DateTimeField(auto_now_add=True, verbose_name='Время создания')
     journal_name = models.CharField(null=True, max_length=20, verbose_name='Название журнала', default='')
     total_pages = models.IntegerField(null=True, verbose_name='Всего страниц', default=33)
@@ -42,7 +42,7 @@ class Journal(models.Model):
 
 class Photo(models.Model):
     journal = models.ForeignKey('Journal', on_delete=models.CASCADE, null=False, verbose_name='Журнал')
-    photo_image = models.ImageField(null=False, blank=False, verbose_name='Изображение')
+    photo_image = models.ImageField(null=False, blank=False, verbose_name='Изображение', default='')
     time_create = models.DateTimeField(auto_now_add=True, verbose_name='Время создания')
     photo_name = models.CharField(max_length=20, verbose_name='Название', default='')
     page_in_journal = models.IntegerField(verbose_name='Номер страницы в журнале', default=0)
