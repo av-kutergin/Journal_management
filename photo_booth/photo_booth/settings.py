@@ -70,17 +70,6 @@ DATABASES = {
     }
 }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': 'mydb',
-#         'USER': 'jack',
-#         'PASSWORD': '123',
-#         'HOST': 'localhost',
-#         'PORT': '',
-#     }
-# }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -131,5 +120,5 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = '/cities'
-LOGOUT_REDIRECT_URL = '/login'
+LOGIN_REDIRECT_URL = '/manage/cities'
+LOGOUT_REDIRECT_URL = '/manage/login'

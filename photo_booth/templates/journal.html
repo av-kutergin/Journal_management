@@ -39,7 +39,7 @@ background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 
                     <form action="" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                       <div class="form-group mb-3" data-upload-id="myImage">
-                      <label for="formFile" class="form-label my-3">Upload new photo:</label>
+                      <label for="formFile" class="form-label my-3">Загрузить новое фото:</label>
                           <input name="image" class="form-control" type="file" accept="image/*" onchange="loadFile(event)">
                           <br>
                           <p><img id="output" width="400"/></p>
@@ -59,12 +59,12 @@ background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 
                             </script>
 
                     <div class="col-auto">
-                        <button type="submit" class="btn-submit btn btn-outline-light btn-lg px-5 my-2" disabled>Submit</button>
+                        <button type="submit" class="btn-submit btn btn-outline-light btn-lg px-5 my-2" disabled>Готово</button>
                     </div>
 
                     </form>
-                    <p class="small pb-lg-2"><a class="text-white-50" href="/cities">Back to city selection</a></p>
-                    <p class="small pb-lg-2"><a class="text-white-50" href="/logout">Log out</a></p>
+                    <p class="small pb-lg-2"><a class="text-white-50" href="/manage/cities">Назад к выбору городов</a></p>
+                    <p class="small pb-lg-2"><a class="text-white-50" href="/manage/logout">Другой пользователь</a></p>
                 </div>
 
             </div>
