@@ -5,10 +5,11 @@ from django.urls import reverse
 
 class City(models.Model):
     city_name = models.CharField(max_length=20, db_index=True, verbose_name='Город')
+    city_code = models.IntegerField(verbose_name='Код города', null=False, default=0)
     operators = models.ManyToManyField(User, verbose_name='Оператор', related_name='cities')
 
     def __str__(self):
-        return self.city_name
+        return f'{self.city_code}: {self.city_name}'
 
     def get_absolute_url(self):
         return reverse('journal', kwargs={'city_id': self.pk})
@@ -24,11 +25,11 @@ class Journal(models.Model):
     journal_owner = models.ForeignKey(User, on_delete=models.CASCADE, null=False, verbose_name='Оператор', default='')
     time_create = models.DateTimeField(auto_now_add=True, verbose_name='Время создания')
     journal_name = models.CharField(null=True, max_length=20, verbose_name='Название журнала', default='')
-    total_pages = models.IntegerField(null=True, verbose_name='Всего страниц', default=33)
-    filled_pages = models.IntegerField(null=True, verbose_name='Заполнено страниц', default=0)
+    total_pages = models.IntegerField(null=True, verbose_name='Всего страниц', default=33, editable=False)
+    filled_pages = models.IntegerField(null=True, verbose_name='Заполнено страниц', default=0, editable=False)
 
     def update_values(self):
-        self.journal_name = f'JR-{self.id}'
+        self.journal_name = f'{self.journal_city}-JR-{self.id}'
         self.filled_pages = len(Photo.objects.filter(journal=self.id))
         self.save(update_fields=['journal_name', 'total_pages', 'filled_pages'])
 
@@ -45,7 +46,7 @@ class Photo(models.Model):
     photo_image = models.ImageField(null=False, blank=False, verbose_name='Изображение', default='')
     time_create = models.DateTimeField(auto_now_add=True, verbose_name='Время создания')
     photo_name = models.CharField(max_length=20, verbose_name='Название', default='')
-    page_in_journal = models.IntegerField(verbose_name='Номер страницы в журнале', default=0)
+    page_in_journal = models.IntegerField(verbose_name='Номер страницы в журнале', default=0, editable=False)
 
     def update_values(self):
         self.page_in_journal = len(Photo.objects.filter(journal=self.journal_id))

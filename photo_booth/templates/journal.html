@@ -29,11 +29,6 @@ background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 
             <div class="md-5 mt-md-4 pb-5">
 
                 <div class="d-grid gap-2">
-                    {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-dark {% if message.tags %}alert-{{ message.tags }}{% endif %}" role="alert">{{ message }}</div>
-                    {% endfor %}
-                    {% endif %}
                     <p class="fw-bold mb-mt-2">{{ current }}</p>
                         <p>{{ message }}</p>
                     <form action="" method="POST" enctype="multipart/form-data">
@@ -57,7 +52,7 @@ background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 
                                 });
                             });
                             </script>
-
+                      </div>
                     <div class="col-auto">
                         <button type="submit" class="btn-submit btn btn-outline-light btn-lg px-5 my-2" disabled>Готово</button>
                     </div>

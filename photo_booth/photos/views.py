@@ -39,7 +39,7 @@ def get_journals(request, city_id):
 
     if journals:
         last_journal = journals.latest('time_create')
-        last_journal_photos = Photo.objects.filter(journal=last_journal.id)
+        last_journal_photos = last_journal.photo_set.all()
         context['message'] += f" В текущем журнале {len(last_journal_photos)} фото."
         if len(last_journal_photos) == last_journal.total_pages:
             last_journal = None
