@@ -1,0 +1,208 @@
+html {
+  height: 100%;
+}
+
+body {
+  background: url(../images/bg.jpg) no-repeat;
+  background-position: center 20%;
+  background-size: auto 120%;
+  background-color: #46302c;
+  overflow: hidden;
+  height: 100%;
+  position: relative;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1.2;
+}
+
+.wrapper {
+  background-color: #fefefe;
+  height: 56%;
+  aspect-ratio: 1.36/1;
+  position: absolute;
+  top: 10%;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  box-shadow: 0 0 30px #fff;
+}
+
+.wrapper:before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  width: calc(100% - 35px); /* 35px ~= примерно ширина скроллбара */
+  height: 100%;
+  background: repeating-linear-gradient(#d02aff, 50%, #45ffd9 50% 100%);
+  opacity: 0.4;
+  background-size: 3% 3%;
+  mix-blend-mode: color-burn;
+  pointer-events: none;
+  animation: drop 30s linear infinite;
+}
+
+.wrapper.wrapper_noglitch:before {
+  content: none;
+}
+
+@keyframes drop {
+  0% {
+    background-position: 0 0%;
+  }
+
+  100% {
+    background-position: 0 100%;
+  }
+}
+
+.back-icon {
+  fill: black;
+  position: relative;
+  top: 0.1em;
+  height: 0.8em;
+  width: 0.8em;
+}
+
+.journal-icon {
+  position: relative;
+  top: 0.1em;
+  height: 1.5em;
+  width: 1.5em;
+}
+
+.page-icon {
+  position: relative;
+  top: 0.1em;
+  height: 1.5em;
+  width: 1.5em;
+}
+
+.inner {
+  background-color: #fefefe;
+  padding: 1rem;
+  height: 100%;
+}
+
+.top {
+  display: flex;
+  height: 1.9em;
+}
+
+.top__back-btn {
+  flex: 0 1 20%;
+  padding: 0.4rem;
+  white-space: nowrap;
+  border-top: 1px solid grey;
+  border-bottom: 1px solid grey;
+  border-right: 1px solid grey;
+}
+
+.top__back-btn:hover {
+  color: #515ac8;
+}
+
+.top__back-btn:hover .back-icon {
+  fill: #515ac8;
+}
+
+.top__address {
+  color: grey;
+  border-top: 1px solid grey;
+  border-bottom: 1px solid grey;
+  padding: 0.4rem;
+  white-space: nowrap;
+  flex: 1 1 auto;
+}
+
+.journals-wrapper {
+  height: 100%;
+  height: calc(100% - 1.9em);
+  overflow-y: auto;
+}
+
+.journals {
+  width: 100%;
+}
+
+.journals__header,
+.journals__name,
+.journals__date {
+  width: 45%;
+  text-align: left;
+}
+
+.journals__header {
+  font-weight: 700;
+  border-left: 1px solid grey;
+  white-space: nowrap;
+  padding: 0.4rem 1.2rem;
+}
+
+.journals__icon {
+  text-align: center;
+}
+
+.journals__row:hover,
+.journals__row:focus-within {
+  background: #515ac8;
+}
+
+.journals__row:hover a,
+.journals__row:focus-within a {
+  color: #fff;
+}
+
+.row-link {
+  display: block;
+  padding: 0.4rem 1.2rem;
+}
+
+.row-link:focus {
+  outline: none;
+}
+
+@media screen and (min-width: 87.5em) {
+  html {
+    font-size: 120%;
+  }
+}
+
+@media screen and (min-width: 118.75em) {
+  html {
+    font-size: 150%;
+  }
+}
+
+@media screen and (max-width: 62em) {
+  body {
+    background: initial;
+    position: static;
+  }
+
+  .wrapper {
+    background-color: initial;
+    position: static;
+    aspect-ratio: auto;
+    height: 100%;
+    overflow: auto;
+    box-shadow: none;
+  }
+
+  .wrapper::before {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 25em) {
+  html {
+    font-size: 90%;
+  }
+}
+
+@media screen and (max-width: 22em) {
+  html {
+    font-size: 80%;
+  }
+}

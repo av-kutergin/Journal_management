@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+
+<head>
+    <link rel="shortcut icon" href="{% static 'images/favicon.png' %}" type="image/png">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проект</title>
+
+    <link rel="stylesheet" href="{% static './styles/reset.css' %}">
+    <link rel="stylesheet" href="{% static './styles/registry.css' %}">
+
+</head>
+
+<body>
+<main class="wrapper">
+    <section class="inner">
+        <div class="top">
+            <h1 class="top__address">город {{ city.city_name }}</h1>
+        </div>
+        <div class="journals-wrapper">
+            <table class="journals">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th class="journals__header">Название</th>
+                    <th class="journals__header">Дата создания</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for j in journal %}
+                <tr class="journals__row">
+                    <td class="journals__icon">
+                        <a class="row-link" href="{{ j.id }}">
+                            <svg class="page-icon">
+                                <use xlink:href="#journal-icon"></use>
+                            </svg>
+                        </a>
+                    </td>
+                    <td class="journals__name">
+                        <a class="row-link" tabindex="-1" href="{{ j.id }}">{{ j.journal_name }}</a>
+                    </td>
+                    <td class="journals__date">
+                        <a class="row-link" tabindex="-1" href="{{ j.id }}">{{ j.time_create }}</a>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<svg style="display:none">
+    <symbol id="journal-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+        <defs>
+            <style>
+                .cls-1{fill:#dadada;}.cls-1,.cls-4{stroke:#1d1d1b;stroke-miterlimit:10;stroke-width:2px;}.cls-2{fill:#575756;}.cls-3{fill:#9d9d9c;}.cls-4{fill:none;}.cls-5{fill:#f6f6f6;}
+            </style>
+        </defs>
+        <title>Монтажная область 1</title>
+        <path class="cls-1" d="M6.93,3.55H6.87A2.21,2.21,0,0,0,4.68,5.78V27a2.2,2.2,0,0,0,2.19,2.23H26.36V3.55Z"/>
+        <polygon class="cls-2" points="4.67 27.02 8.61 24.49 8.61 2.94 4.67 2.94 4.67 27.02"/>
+        <rect class="cls-3" x="7.94" y="4.67" width="18.42" height="20.43"/>
+        <path class="cls-4" d="M6.93,3.55H6.87A2.21,2.21,0,0,0,4.68,5.78V27a2.2,2.2,0,0,0,2.19,2.23H26.36V3.55Z"/>
+        <rect class="cls-5" x="11.97" y="7.57" width="8.16" height="6.16"/>
+        <rect class="cls-3" x="13.41" y="9.38" width="5.47" height="1.27"/>
+    </symbol>
+</svg>
+
+<script src="{% static './scripts/polyfills.js' %}"></script>
+
+</body>
+
+</html>

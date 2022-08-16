@@ -4,10 +4,43 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
-from photos.models import City, Photo, Journal
+from photos.models import City, Photo, Journal, TOTAL_PAGES
 
 
 def main_page(request):
+    city = City.objects.all()
+    context = {'city': city}
+    return render(request, 'index.html', context)
+
+
+def registry(request, city_code):
+    city = City.objects.get(city_code=city_code)
+    journal = city.journal_set.all()
+    context = {'journal': journal, 'city': city}
+    return render(request, 'registry.html', context)
+
+
+def registry_further(request, city_code, journal_id):
+    city = City.objects.get(city_code=city_code)
+    journal = Journal.objects.get(id=journal_id)
+    photos = journal.photo_set.all()
+    context = {
+        'journal': journal,
+        'city': city,
+        'photos': photos,
+    }
+    return render(request, 'registry_further.html', context)
+
+
+def furthermore(request, city_code, journal_id, photo_id):
+    photo = Photo.objects.get(id=photo_id)
+    context = {
+        'photo': photo,
+    }
+    return render(request, 'image.html', context)
+
+
+def main_manage(request):
     if request.user.is_authenticated:
         return cities_selection(request)
     return redirect('/manage/login')
@@ -28,7 +61,7 @@ def cities_selection(request):
 def get_journals(request, city_id):
     city = City.objects.get(id=city_id)
     user = User.objects.get(id=request.user.pk)
-    journals = Journal.objects.filter(journal_city=city).filter(journal_owner=user)
+    journals = Journal.objects.filter(journal_city=city)
     message = f"Количество журналов: {len(journals)}."
     last_journal = None
 
@@ -46,14 +79,21 @@ def get_journals(request, city_id):
 
     if request.method == "POST":
         image = request.FILES.get('image')
+        photo_number = 1
+        for journal in journals:
+            photo_number += journal.filled_pages
+
         if not last_journal:
             last_journal = Journal.objects.create(
                 journal_city=city,
+                journal_name=f'{photo_number}-{photo_number+TOTAL_PAGES-1}',
                 journal_owner_id=user.id,
                 time_create=datetime.now(),
             )
+
         new_photo = Photo.objects.create(
             journal=last_journal,
+            photo_name=f'{city.city_code}.{photo_number}',
             photo_image=image,
             time_create=datetime.now(),
         )
@@ -65,3 +105,6 @@ def get_journals(request, city_id):
         return redirect('journal', city_id)
 
     return render(request, 'journal.html', context)
+
+
+
