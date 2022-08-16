@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <link rel="shortcut icon" href="{% static 'images/favicon.png' %}" type="image/png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{% static './styles/reset.css' %}">
+    <link rel="stylesheet" href="{% static './styles/main.css' %}">
+</head>
+<body>
+
+<div class="cities">
+    <div class="cities__menu">
+        <div class="cities__search"><input type="text" class="cities__search-input"/></div>
+        <div class="cities__list">
+            {% for c in city %}
+            <a href="{{ c.get_city_code_url }}">
+                <div class="cities__city">
+                    <div class="cities__city-code">{{ c.city_code }}</div>
+                    <div class="cities__city-name">{{ c.city_name }}</div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+        document.querySelector('.cities__search-input').addEventListener('input', (event) => {
+            const value = event.target.value;
+            let cityElements = document.querySelectorAll('.cities__city');
+            for (let i=0; i<cityElements.length; i++) {
+                const cityElement = cityElements[i]
+                if (value.length === 0) {
+                    cityElement.classList.remove('cities__city_ishidden')    
+                } else {
+                    if (cityElement.innerText.toLowerCase().includes(value.toLowerCase())) {
+                        cityElement.classList.remove('cities__city_ishidden')    
+                    } else {
+                        cityElement.classList.add('cities__city_ishidden')    
+                    }
+                }
+            }
+        })   
+
+
+
+</script>
+
+</body>
+</html>
