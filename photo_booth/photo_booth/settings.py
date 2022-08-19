@@ -84,7 +84,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/uploaded_photos/'
-MEDIA_ROOT = BASE_DIR / 'static/uploaded_photos'
+MEDIA_ROOT = BASE_DIR / 'staticfiles/uploaded_photos'
 
 
 STATICFILES_DIRS = [
@@ -95,3 +95,22 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = '/manage/cities'
 LOGOUT_REDIRECT_URL = '/manage/login'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'Photo.log'),
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
