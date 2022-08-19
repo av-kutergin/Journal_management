@@ -1,22 +1,31 @@
 import os
+import re
 
 from django.contrib.auth.models import User
+from django.core.exceptions import SuspiciousOperation, FieldError
 from django.db import models
+from django.db.models.signals import post_save
 from django.urls import reverse
+from django.dispatch import receiver
 
 TOTAL_PAGES = 33
 
 
 def photo_path(instance, filename):
     _, file_extension = os.path.splitext(filename)
-    city_code, _ = instance.photo_name.split('.')
-    return f'{city_code}/{instance.photo_name}{file_extension}'
+    city_code = instance.journal.journal_city.city_code
+    return f'{city_code}/{city_code}.{get_photo_number(instance)[0]}{file_extension}'
 
 
 class City(models.Model):
     city_name = models.CharField(max_length=20, db_index=True, verbose_name='Город')
     city_code = models.IntegerField(verbose_name='Код города', null=False, default=0)
     operators = models.ManyToManyField(User, verbose_name='Оператор', related_name='cities')
+
+    class Meta:
+        verbose_name = 'Город'
+        verbose_name_plural = 'Города'
+        ordering = ['city_name']
 
     def __str__(self):
         return f'{self.city_code}: {self.city_name}'
@@ -27,33 +36,29 @@ class City(models.Model):
     def get_city_code_url(self):
         return reverse('registry', kwargs={'city_code': self.city_code})
 
-    class Meta:
-        verbose_name = 'Город'
-        verbose_name_plural = 'Города'
-        ordering = ['city_name']
-
 
 class Journal(models.Model):
     journal_city = models.ForeignKey('City', on_delete=models.CASCADE, null=False, verbose_name='Город')
     journal_owner = models.ForeignKey(User, on_delete=models.CASCADE, null=False, verbose_name='Оператор', default='')
     time_create = models.DateTimeField(auto_now_add=True, verbose_name='Время создания')
-    journal_name = models.CharField(null=True, max_length=20, verbose_name='Название журнала', default='')
+    journal_name = models.CharField(null=True, max_length=20, verbose_name='Название журнала', default='', blank=True)
     total_pages = models.IntegerField(null=True, verbose_name='Всего страниц', default=TOTAL_PAGES, editable=False)
     filled_pages = models.IntegerField(null=True, verbose_name='Заполнено страниц', default=0, editable=False)
 
+    class Meta:
+        verbose_name = 'Журнал'
+        verbose_name_plural = 'Журналы'
+        ordering = ['journal_name']
+
     def update_values(self):
         self.filled_pages = len(Photo.objects.filter(journal=self.id))
-        self.save(update_fields=['journal_name', 'total_pages', 'filled_pages'])
+        self.save(update_fields=['filled_pages'])
 
     def get_absolute_url(self):
         return reverse('journal', kwargs={'journal_id': self.pk})
 
     def __str__(self):
-        return self.journal_name
-
-    class Meta:
-        verbose_name = 'Журнал'
-        verbose_name_plural = 'Журналы'
+        return f'{self.journal_city.city_code}: {self.journal_name}'
 
 
 class Photo(models.Model):
@@ -61,18 +66,115 @@ class Photo(models.Model):
     photo_image = models.ImageField(null=False, blank=False, verbose_name='Изображение', default='',
                                     upload_to=photo_path)
     time_create = models.DateTimeField(auto_now_add=True, verbose_name='Время создания')
-    photo_name = models.CharField(max_length=20, verbose_name='Название', default='')
+    photo_name = models.CharField(max_length=20, verbose_name='Название', default='', blank=True)
     page_in_journal = models.IntegerField(verbose_name='Номер страницы в журнале', default=0, editable=False)
 
-    def update_values(self):
-        self.page_in_journal = len(Photo.objects.filter(journal=self.journal_id))
-        self.save(update_fields=['photo_name', 'page_in_journal'])
+    class Meta:
+        verbose_name = 'Фотография'
+        verbose_name_plural = 'Фотографии'
+        ordering = ['photo_name']
 
     def get_absolute_url(self):
         return reverse('furthermore',
                        kwargs={'city_code': self.journal.journal_city.city_code, 'journal_id': self.journal_id,
                                'photo_id': self.pk})
 
-    class Meta:
-        verbose_name = 'Фотография'
-        verbose_name_plural = 'Фотографии'
+    def get_previous_page_num(self):
+        if Journal.objects.get(pk=self.journal_id).filled_pages:
+            last_page = Photo.objects.filter(journal=self.journal).latest('time_create')
+            _, number = str(last_page.photo_name).split('.')
+            number += 1
+        else:
+            number = get_photo_number(self)
+        return number
+
+    # def update_filename(self):
+    #
+
+
+@receiver(post_save, sender=Photo)
+def update_photo_values(sender, instance, **kwargs):
+    journal = Journal.objects.get(pk=instance.journal_id)
+    photo_number, page_in_journal = get_photo_number(instance)
+    if instance.photo_name:
+        initial_path = instance.photo_image.path
+        instance.photo_image = photo_path(instance, instance.photo_image.url.split('/')[-1])
+        os.rename(initial_path, instance.photo_image.path)
+    instance.page_in_journal = page_in_journal
+    instance.photo_name = f'{instance.journal.journal_city.city_code}.{photo_number}'
+
+    post_save.disconnect(update_photo_values, sender=Photo)
+    instance.save()
+    post_save.connect(update_photo_values, sender=Photo)
+    journal.update_values()
+
+
+def get_photo_number(instance):
+    instance_journal = Journal.objects.get(pk=instance.journal_id)
+    photos = Photo.objects.filter(journal=instance_journal)
+
+    photo_numbers_in_journal = set()
+    for photo in photos:
+        if photo != instance and photo.photo_name:
+            photo_numbers_in_journal.add(int(photo.photo_name.split('.')[-1]))
+
+    first_page, last_page = map(int, instance_journal.journal_name.split('-'))
+    if instance.photo_name:
+        pattern = '((\d).)?(\d)+'
+        if not re.match(pattern, instance.photo_name):
+            raise ValueError
+        photo_number = int(instance.photo_name.split('.')[-1])
+        if (photo_number < first_page) or (photo_number > last_page):
+            raise FieldError
+        if photo_number in photo_numbers_in_journal:
+            raise SuspiciousOperation
+        page_in_journal = photo_number - first_page + 1
+        return photo_number, page_in_journal
+
+    if photo_numbers_in_journal:
+        photo_number = max(photo_numbers_in_journal) + 1
+        return photo_number, photo_number - first_page + 1
+
+    return first_page, 1
+
+
+@receiver(post_save, sender=Journal)
+def update_journal(sender, instance, **kwargs):
+    first_page, last_page = define_journal_pages(instance)
+    instance.journal_name = f'{first_page}-{last_page}'
+    post_save.disconnect(update_journal, sender=Journal)
+    instance.save()
+    post_save.connect(update_journal, sender=Journal)
+
+
+def define_journal_pages(instance):
+    all_journals = Journal.objects.filter(journal_city=instance.journal_city)
+    journals_in_city = set()
+    for journal in all_journals:
+        if journal != instance:
+            journals_in_city.add(int(journal.journal_name.split('-')[-1]))
+
+    if instance.journal_name:
+        pattern = '(\d)+-(\d)+'
+        if not re.match(pattern, instance.journal_name):
+            raise ValueError
+
+        first_page, last_page = map(int, instance.journal_name.split('-'))
+        if (
+            ((first_page - 1) % TOTAL_PAGES != 0)
+            or (last_page % TOTAL_PAGES != 0)
+            or (last_page - first_page != TOTAL_PAGES - 1)
+        ):
+            raise FieldError
+
+        if last_page in journals_in_city:
+            raise SuspiciousOperation
+
+        return first_page, last_page
+
+    if journals_in_city:
+        first_page = max(journals_in_city) + 1
+        last_page = first_page + TOTAL_PAGES - 1
+        return first_page, last_page
+
+    return 1, TOTAL_PAGES

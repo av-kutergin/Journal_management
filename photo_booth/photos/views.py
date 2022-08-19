@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
-from photos.models import City, Photo, Journal, TOTAL_PAGES
+from photos.models import City, Photo, Journal
 
 
 def main_page(request):
@@ -79,32 +79,23 @@ def get_journals(request, city_id):
 
     if request.method == "POST":
         image = request.FILES.get('image')
-        photo_number = 1
-        for journal in journals:
-            photo_number += journal.filled_pages
 
         if not last_journal:
             last_journal = Journal.objects.create(
                 journal_city=city,
-                journal_name=f'{photo_number}-{photo_number+TOTAL_PAGES-1}',
                 journal_owner_id=user.id,
                 time_create=datetime.now(),
             )
 
-        new_photo = Photo.objects.create(
+        Photo.objects.create(
             journal=last_journal,
-            photo_name=f'{city.city_code}.{photo_number}',
             photo_image=image,
             time_create=datetime.now(),
         )
 
         last_journal.update_values()
-        new_photo.update_values()
 
         messages.info(request, 'Удачно загружено 1 фото')
         return redirect('journal', city_id)
 
     return render(request, 'journal.html', context)
-
-
-
