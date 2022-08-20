@@ -79,18 +79,6 @@ class Photo(models.Model):
                        kwargs={'city_code': self.journal.journal_city.city_code, 'journal_id': self.journal_id,
                                'photo_id': self.pk})
 
-    def get_previous_page_num(self):
-        if Journal.objects.get(pk=self.journal_id).filled_pages:
-            last_page = Photo.objects.filter(journal=self.journal).latest('time_create')
-            _, number = str(last_page.photo_name).split('.')
-            number += 1
-        else:
-            number = get_photo_number(self)
-        return number
-
-    # def update_filename(self):
-    #
-
 
 @receiver(post_save, sender=Photo)
 def update_photo_values(sender, instance, **kwargs):
@@ -102,7 +90,6 @@ def update_photo_values(sender, instance, **kwargs):
         os.rename(initial_path, instance.photo_image.path)
     instance.page_in_journal = page_in_journal
     instance.photo_name = f'{instance.journal.journal_city.city_code}.{photo_number}'
-
     post_save.disconnect(update_photo_values, sender=Photo)
     instance.save()
     post_save.connect(update_photo_values, sender=Photo)
@@ -139,9 +126,22 @@ def get_photo_number(instance):
 
 
 @receiver(post_save, sender=Journal)
-def update_journal(sender, instance, **kwargs):
+def update_journal(sender, instance, created, **kwargs):
     first_page, last_page = define_journal_pages(instance)
     instance.journal_name = f'{first_page}-{last_page}'
+
+    photos = Photo.objects.filter(journal=instance)
+    if not created:
+        for photo in photos:
+            photo.photo_name = f'{instance.journal_city.city_code}.{first_page + photo.page_in_journal - 1}'
+            initial_path = photo.photo_image.path
+            photo.photo_image = photo_path(photo, photo.photo_image.url.split('/')[-1])
+            os.rename(initial_path, photo.photo_image.path)
+
+            post_save.disconnect(update_photo_values, sender=Photo)
+            photo.save()
+            post_save.connect(update_photo_values, sender=Photo)
+
     post_save.disconnect(update_journal, sender=Journal)
     instance.save()
     post_save.connect(update_journal, sender=Journal)
