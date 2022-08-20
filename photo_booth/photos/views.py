@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
-from photos.models import City, Photo, Journal
+from photos.models import City, Photo, Journal, TOTAL_PAGES
 
 
 def main_page(request):
@@ -71,7 +71,10 @@ def get_journals(request, city_id):
     }
 
     if journals:
-        last_journal = journals.latest('time_create')
+        first_journal_pages = set()
+        for journal in journals:
+            first_journal_pages.add(int(journal.journal_name.split('-')[0]))
+        last_journal = journals.get(journal_name=f'{max(first_journal_pages)}-{max(first_journal_pages) + TOTAL_PAGES - 1}')
         last_journal_photos = last_journal.photo_set.all()
         context['message'] += f" В текущем журнале {len(last_journal_photos)} фото."
         if len(last_journal_photos) == last_journal.total_pages:
