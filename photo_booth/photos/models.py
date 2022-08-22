@@ -99,7 +99,7 @@ class Photo(models.Model):
     class Meta:
         verbose_name = 'Фотография'
         verbose_name_plural = 'Фотографии'
-        ordering = ['photo_name']
+        ordering = ['page_in_journal']
 
     def __str__(self):
         return f'{self.journal}, {self.photo_name}'
