@@ -1,8 +1,27 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+
 from .models import Photo, Journal, City
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 
 admin.site.unregister(Group)
+admin.site.unregister(User)
+
+
+class CityInLine(admin.StackedInline):
+    model = City.operators.through
+    verbose_name = 'Связь Оператор-Город'
+    verbose_name_plural = 'Связи Оператор-Город'
+    extra = 0
+
+
+@admin.register(User)
+class CustomUserAdmin(UserAdmin):
+    fieldsets = (
+        (None, {"fields": ("username", "password")}),
+        ("Персональные данные", {"fields": ("first_name", "last_name", "email")}),
+    )
+    inlines = [CityInLine]
 
 
 class CityAdmin(admin.ModelAdmin):

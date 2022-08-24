@@ -8,6 +8,8 @@ from django.db.models.signals import post_save
 from django.urls import reverse
 from django.dispatch import receiver
 
+from photo_booth.settings import BASE_DIR, MEDIA_ROOT, STATIC_ROOT
+
 TOTAL_PAGES = 33
 
 
@@ -19,7 +21,7 @@ def photo_path(instance, filename):
 
 class City(models.Model):
     city_name = models.CharField(max_length=20, db_index=True, verbose_name='Город')
-    city_code = models.IntegerField(verbose_name='Код города', null=False, default=0)
+    city_code = models.IntegerField(verbose_name='Код города', null=False, default=0, unique=True)
     operators = models.ManyToManyField(User, verbose_name='Оператор', related_name='cities')
 
     class Meta:
@@ -54,7 +56,7 @@ class Journal(models.Model):
         ordering = ['journal_city', 'journal_name']
 
     def update_values(self):
-        self.filled_pages = len(Photo.objects.filter(journal=self.id))
+        self.filled_pages = len(Photo.objects.filter(journal=self))
         self.save(update_fields=['filled_pages'])
 
     def get_absolute_url(self):
@@ -136,14 +138,70 @@ class Photo(models.Model):
         return True
 
 
+@receiver(post_save, sender=City)
+def update_photos_on_city_renaming(sender, instance, **kwargs):
+    journals = Journal.objects.filter(journal_city_id=instance.id)
+    for journal in journals:
+        photos = Photo.objects.filter(journal=journal)
+        for photo in photos:
+            page = photo.photo_name.split('.')[-1]
+            photo.photo_name = f'{instance.city_code}.{page}'
+            photo.save()
+
+    post_save.disconnect(update_photos_on_city_renaming, sender=City)
+    instance.save()
+    post_save.connect(update_photos_on_city_renaming, sender=City)
+
+
+@receiver(post_save, sender=Journal)
+def update_journal(sender, instance, created, **kwargs):
+    instance.clean()
+    first_page, last_page = define_journal_pages(instance)
+    instance.journal_name = f'{first_page}-{last_page}'
+    photos = Photo.objects.filter(journal=instance)
+    if not created:
+        for photo in photos:
+            if not (first_page <= int(photo.photo_name.split('.')[-1]) <= last_page):
+                photo.photo_name = f'{instance.journal_city.city_code}.{first_page + photo.page_in_journal - 1}'
+                photo.save()
+
+    post_save.disconnect(update_journal, sender=Journal)
+    instance.save()
+    post_save.connect(update_journal, sender=Journal)
+
+
+def define_journal_pages(instance):
+    all_journals = Journal.objects.filter(journal_city=instance.journal_city)
+    journals_in_city = set()
+    for journal in all_journals:
+        if journal != instance:
+            journals_in_city.add(int(journal.journal_name.split('-')[-1]))
+
+    if instance.journal_name:
+        first_page, last_page = map(int, instance.journal_name.split('-'))
+        return first_page, last_page
+
+    if journals_in_city:
+        first_page = max(journals_in_city) + 1
+        last_page = first_page + TOTAL_PAGES - 1
+        return first_page, last_page
+
+    return 1, TOTAL_PAGES
+
+
 @receiver(post_save, sender=Photo)
 def update_photo_values(sender, instance, **kwargs):
+    instance.clean()
     journal = Journal.objects.get(pk=instance.journal_id)
     photo_number, page_in_journal = get_photo_number(instance)
 
     if instance.photo_name:
         initial_path = instance.photo_image.path
         instance.photo_image = photo_path(instance, instance.photo_image.url.split('/')[-1])
+        new_directory = os.path.join(MEDIA_ROOT, str(instance.journal.journal_city.city_code))
+
+        if not os.path.exists(new_directory):
+            os.mkdir(new_directory)
         os.rename(initial_path, instance.photo_image.path)
 
     instance.photo_name = f'{instance.journal.journal_city.city_code}.{photo_number}'
@@ -174,47 +232,6 @@ def get_photo_number(instance):
         return photo_number, photo_number - first_page + 1
 
     return first_page, 1
-
-
-@receiver(post_save, sender=Journal)
-def update_journal(sender, instance, created, **kwargs):
-    first_page, last_page = define_journal_pages(instance)
-    instance.journal_name = f'{first_page}-{last_page}'
-    photos = Photo.objects.filter(journal=instance)
-    if not created:
-        for photo in photos:
-            if not (first_page <= int(photo.photo_name.split('.')[-1]) <= last_page):
-                photo.photo_name = f'{instance.journal_city.city_code}.{first_page + photo.page_in_journal - 1}'
-                initial_path = photo.photo_image.path
-                photo.photo_image = photo_path(photo, photo.photo_image.url.split('/')[-1])
-                os.rename(initial_path, photo.photo_image.path)
-
-                post_save.disconnect(update_photo_values, sender=Photo)
-                photo.save()
-                post_save.connect(update_photo_values, sender=Photo)
-
-    post_save.disconnect(update_journal, sender=Journal)
-    instance.save()
-    post_save.connect(update_journal, sender=Journal)
-
-
-def define_journal_pages(instance):
-    all_journals = Journal.objects.filter(journal_city=instance.journal_city)
-    journals_in_city = set()
-    for journal in all_journals:
-        if journal != instance:
-            journals_in_city.add(int(journal.journal_name.split('-')[-1]))
-
-    if instance.journal_name:
-        first_page, last_page = map(int, instance.journal_name.split('-'))
-        return first_page, last_page
-
-    if journals_in_city:
-        first_page = max(journals_in_city) + 1
-        last_page = first_page + TOTAL_PAGES - 1
-        return first_page, last_page
-
-    return 1, TOTAL_PAGES
 
 
 @receiver(models.signals.post_delete, sender=Photo)

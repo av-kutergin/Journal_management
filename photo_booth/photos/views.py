@@ -43,7 +43,7 @@ def furthermore(request, city_code, journal_id, photo_id):
 def main_manage(request):
     if request.user.is_authenticated:
         return cities_selection(request)
-    return redirect('/manage/login')
+    return redirect('/manage/login/')
 
 
 def cities_selection(request):
