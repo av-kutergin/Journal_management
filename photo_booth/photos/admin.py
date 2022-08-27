@@ -10,8 +10,8 @@ admin.site.unregister(User)
 
 class CityInLine(admin.StackedInline):
     model = City.operators.through
-    verbose_name = 'Связь Оператор-Город'
-    verbose_name_plural = 'Связи Оператор-Город'
+    verbose_name = 'Связь с городом'
+    verbose_name_plural = 'Привязанные города'
     extra = 0
 
 
