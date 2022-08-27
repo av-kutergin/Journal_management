@@ -3,8 +3,10 @@ import tempfile
 import time
 
 from django.contrib.auth.models import User
+from django.utils.module_loading import import_string
+from decouple import config
 
-from photo_booth.settings import MEDIA_ROOT
+MEDIA_ROOT = import_string(f'{config("DJANGO_SETTINGS_MODULE")}.MEDIA_ROOT')
 from photos.models import *
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'photo_booth.settings')
