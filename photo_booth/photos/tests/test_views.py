@@ -2,8 +2,10 @@ import os
 import tempfile
 
 from django.urls import reverse
+from django.utils.module_loading import import_string
+from decouple import config
 
-from photo_booth.settings import MEDIA_ROOT
+MEDIA_ROOT = import_string(f'{config("DJANGO_SETTINGS_MODULE")}.MEDIA_ROOT')
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'photo_booth.settings')
 import django
