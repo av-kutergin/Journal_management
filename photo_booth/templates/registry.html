@@ -33,17 +33,17 @@
                 {% for j in journal %}
                 <tr class="journals__row">
                     <td class="journals__icon">
-                        <a class="row-link" href="{{ j.id }}">
+                        <a class="row-link" href="{{ j.journal_name }}">
                             <svg class="page-icon">
                                 <use xlink:href="#journal-icon"></use>
                             </svg>
                         </a>
                     </td>
                     <td class="journals__name">
-                        <a class="row-link" tabindex="-1" href="{{ j.id }}">{{ j.journal_name }}</a>
+                        <a class="row-link" tabindex="-1" href="{{ j.journal_name }}">{{ j.journal_name }}</a>
                     </td>
                     <td class="journals__date">
-                        <a class="row-link" tabindex="-1" href="{{ j.id }}">{{ j.time_create }}</a>
+                        <a class="row-link" tabindex="-1" href="{{ j.journal_name }}">{{ j.time_create }}</a>
                     </td>
                 </tr>
                 {% endfor %}

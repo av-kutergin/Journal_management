@@ -1,25 +1,24 @@
 import os
-import tempfile
-import time
-
-from django.contrib.auth.models import User
-
-from photo_booth.settings import MEDIA_ROOT
-from photos.models import *
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'photo_booth.settings')
-import django
-
-django.setup()
-
-from django.test import TestCase, override_settings
-from django.test.client import RequestFactory, Client
-from django.core.files import File
-from django.core.exceptions import ValidationError
 
 import shutil
 from io import BytesIO
 from PIL import Image
+
+from django.test import TestCase
+from django.test.client import RequestFactory, Client
+from django.core.files import File
+from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
+
+from photos.models import City, Journal, Photo
+from photo_booth.settings import MEDIA_ROOT
+
+
+# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'photo_booth.settings')
+# import django
+#
+# django.setup()
+
 
 TEST_DIR = 'test_data'
 
@@ -34,28 +33,27 @@ class ModelTests(TestCase):
         file_obj.seek(0)
         return File(file_obj, name=name)
 
-    @classmethod
-    def setUpTestData(cls) -> None:
-        cls.factory = RequestFactory()
-        cls.user = User.objects.create_user(id=2, username='123', email='abirvalg@lasdf.am',
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.user = User.objects.create_user(id=2, username='123', email='abirvalg@lasdf.am',
                                              password='jasdfjkn,m1')
-        cls.user.save()
-        cls.city1 = City.objects.create(id=1, city_name='City1', city_code=11111111)
-        cls.city2 = City.objects.create(id=2, city_name='City2', city_code=22222222)
-        cls.city1.operators.add(cls.user)
-        cls.city1.save()
-        cls.city2.save()
-        cls.journal1 = Journal(journal_city=cls.city1, journal_owner=cls.user)
-        cls.journal2 = Journal(journal_city=cls.city2, journal_owner=cls.user)
-        cls.journal1.save()
-        cls.journal2.save()
-        cls.photo1 = Photo.objects.create(journal=cls.journal1, photo_image=cls.get_image_file())
-        cls.photo2 = Photo.objects.create(journal=cls.journal1, photo_image=cls.get_image_file())
-        cls.photo3 = Photo.objects.create(journal=cls.journal2, photo_image=cls.get_image_file())
-        cls.photo1.save()
-        cls.photo2.save()
-        cls.photo3.save()
-        cls.client = Client()
+        self.user.save()
+        self.city1 = City.objects.create(id=1, city_name='City1', city_code=11111111)
+        self.city2 = City.objects.create(id=2, city_name='City2', city_code=22222222)
+        self.city1.operators.add(self.user)
+        self.city1.save()
+        self.city2.save()
+        self.journal1 = Journal(journal_city=self.city1, journal_owner=self.user)
+        self.journal2 = Journal(journal_city=self.city2, journal_owner=self.user)
+        self.journal1.save()
+        self.journal2.save()
+        self.photo1 = Photo.objects.create(journal=self.journal1, photo_image=self.get_image_file())
+        self.photo2 = Photo.objects.create(journal=self.journal1, photo_image=self.get_image_file())
+        self.photo3 = Photo.objects.create(journal=self.journal2, photo_image=self.get_image_file())
+        self.photo1.save()
+        self.photo2.save()
+        self.photo3.save()
+        self.client = Client()
 
     def test_city_code_change_photo_name(self):
         self.city1.city_code = '33333333'
@@ -89,14 +87,14 @@ class ModelTests(TestCase):
     def test_journal_update_values(self):
         journal3 = Journal.objects.create(journal_city=self.city2, journal_owner=self.user)
         journal4 = Journal.objects.create(journal_city=self.city2, journal_owner=self.user)
-        self.assertEqual(journal3.filled_pages, len(journal3.photo_set.all()))
+        self.assertEqual(journal3.filled_pages, journal3.photo_set.all().count())
         Photo.objects.create(journal=journal3, photo_image=self.get_image_file())
         Photo.objects.create(journal=journal3, photo_image=self.get_image_file())
         Photo.objects.create(journal=journal4, photo_image=self.get_image_file())
         journal3.update_values()
         journal4.update_values()
-        self.assertEqual(journal3.filled_pages, len(journal3.photo_set.all()))
-        self.assertEqual(journal4.filled_pages, len(journal4.photo_set.all()))
+        self.assertEqual(journal3.filled_pages, journal3.photo_set.all().count())
+        self.assertEqual(journal4.filled_pages, journal4.photo_set.all().count())
 
     def test_photos_order_on_delete(self):
         self.photo1.delete()
@@ -122,7 +120,7 @@ class ModelTests(TestCase):
 
     def test_journal_clean_method_wrong_input_2(self):
         with self.assertRaises(ValidationError) as ctx:
-            self.journal2.journal_name ='1-66'
+            self.journal2.journal_name = '1-66'
             self.journal2.save()
         expected_msg = ValidationError({'journal_name': ['Неверный интервал.']})
         self.assertEquals(ctx.exception, expected_msg)
@@ -146,7 +144,7 @@ class ModelTests(TestCase):
 
     def test_photo_clean_method_wrong_input_2(self):
         with self.assertRaises(ValidationError) as ctx:
-            self.photo3.photo_name ='4568'
+            self.photo3.photo_name = '4568'
             self.photo3.save()
         expected_msg = ValidationError({'photo_name': ['Номер фотографии должен входить в диапазон журнала.']})
         self.assertEquals(ctx.exception, expected_msg)

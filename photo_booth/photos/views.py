@@ -1,10 +1,11 @@
 from datetime import datetime
 
 from django.contrib.auth.models import User
+from django.core.exceptions import BadRequest
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
-from photos.models import City, Photo, Journal, TOTAL_PAGES
+from photos.models import City, Photo, Journal
 
 
 def main_page(request):
@@ -20,9 +21,9 @@ def registry(request, city_code):
     return render(request, 'registry.html', context)
 
 
-def registry_further(request, city_code, journal_id):
+def registry_further(request, city_code, journal_name):
     city = City.objects.get(city_code=city_code)
-    journal = Journal.objects.get(id=journal_id)
+    journal = Journal.objects.get(journal_city_id=city.pk, journal_name=journal_name)
     photos = journal.photo_set.all()
     context = {
         'journal': journal,
@@ -32,7 +33,7 @@ def registry_further(request, city_code, journal_id):
     return render(request, 'registry_further.html', context)
 
 
-def furthermore(request, city_code, journal_id, photo_id):
+def furthermore(request, city_code, journal_name, photo_id):
     photo = Photo.objects.get(id=photo_id)
     context = {
         'photo': photo,
@@ -51,34 +52,19 @@ def cities_selection(request):
     context = {
         'cities_set': available_cities,
     }
-    if len(available_cities) == 0:
+    if available_cities.count() == 0:
         context.update({'message': 'У тебя нет городов, мой друг'})
-    if len(available_cities) == 1:
-        return get_journals(request, available_cities[0].id)
+    if available_cities.count() == 1:
+        return get_or_update_journals(request, available_cities[0].city_code)
     return render(request, 'cities.html', context)
 
 
-def get_journals(request, city_id):
-    city = City.objects.get(id=city_id)
+def get_or_update_journals(request, city_code):
+    city = City.objects.get(city_code=city_code)
     user = User.objects.get(id=request.user.pk)
     journals = Journal.objects.filter(journal_city=city)
-    message = f"Количество журналов: {len(journals)}."
-    last_journal = None
 
-    context = {
-        'message': message,
-        'current': f'Текущий город: {city}',
-    }
-
-    if journals:
-        first_journal_pages = set()
-        for journal in journals:
-            first_journal_pages.add(int(journal.journal_name.split('-')[0]))
-        last_journal = journals.get(journal_name=f'{max(first_journal_pages)}-{max(first_journal_pages) + TOTAL_PAGES - 1}')
-        last_journal_photos = last_journal.photo_set.all()
-        context['message'] += f" В текущем журнале {len(last_journal_photos)} фото."
-        if len(last_journal_photos) == last_journal.total_pages:
-            last_journal = None
+    last_journal = Journal.get_last_journal(city)
 
     if request.method == "POST":
         image = request.FILES.get('image')
@@ -99,6 +85,19 @@ def get_journals(request, city_id):
         last_journal.update_values()
 
         messages.info(request, 'Удачно загружено 1 фото')
-        return redirect('journal', city_id)
+        return redirect('journal', city_code)
 
-    return render(request, 'journal.html', context)
+    elif request.method == "GET":
+        message = f"Количество журналов: {journals.count()}."
+        context = {
+            'message': message,
+            'current': f'Текущий город: {city}',
+        }
+        if last_journal:
+            last_journal_photos = last_journal.photo_set.all()
+            context['message'] += f" В текущем журнале {last_journal_photos.count()} фото."
+
+        return render(request, 'journal.html', context)
+
+    else:
+        raise BadRequest

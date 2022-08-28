@@ -80,13 +80,13 @@ class ViewsTests(TestCase):
     def test_registry_further(self):
         request = self.factory.get('registry_further')
         # request.user = self.user
-        response = registry_further(request, self.city_1.city_code, self.journal.pk)
+        response = registry_further(request, self.city_1.city_code, self.journal.journal_name)
         self.assertEqual(response.status_code, 200)
 
     def test_furthermore(self):
         request = self.factory.get('furthermore')
         request.user = self.user
-        response = furthermore(request, self.city_1.city_code, self.journal.pk, self.photo.pk)
+        response = furthermore(request, self.city_1.city_code, self.journal.journal_name, self.photo.pk)
         self.assertEqual(response.status_code, 200)
 
     def test_main_manage_user(self):
@@ -111,40 +111,49 @@ class ViewsTests(TestCase):
         response = cities_selection(request)
         self.assertEqual(response.status_code, 200)
 
-    def test_get_journals(self):
-        request = self.factory.get('get_journals')
+    def test_get_or_update_journals(self):
+        request = self.factory.get('get_or_update_journals')
         request.user = self.user
-        response = get_journals(request, self.city_1.pk)
+        response = get_or_update_journals(request, self.city_1.city_code)
         self.assertEqual(response.status_code, 200)
 
-    def test_get_journals_POST(self):
+    def test_get_or_update_journals_POST(self):
         file = self.get_image_file()
-        request = self.factory.post(path='get_journals', data={'image': self.get_image_file()})
+        request = self.factory.post(path='get_or_update_journals', data={'image': self.get_image_file()})
         request.user = self.user
         add_session_to_request(request)
         add_messages_to_request(request)
-        response = get_journals(request, self.city_1.pk)
+        response = get_or_update_journals(request, self.city_1.city_code)
         self.assertEqual(len(self.city_1.journal_set.all()), 1)
         self.assertEqual(response.status_code, 302)
 
-    def test_get_journals_POST_new_journal(self):
+    def test_get_or_update_journals_POST_new_journal(self):
         journal1 = Journal.objects.create(journal_city=self.city_1, journal_owner=self.user, journal_name='100-132')
         for i in range(33):
             photo = Photo.objects.create(journal=journal1, photo_image=self.get_image_file())
             photo.save()
-        request = self.factory.post(path='get_journals', data={'image': self.get_image_file()})
+        request = self.factory.post(path='get_or_update_journals', data={'image': self.get_image_file()})
         request.user = self.user
         add_session_to_request(request)
         add_messages_to_request(request)
-        response = get_journals(request, self.city_1.pk)
-        self.assertEqual(len(self.city_1.journal_set.all()), 3)
+        response = get_or_update_journals(request, self.city_1.city_code)
+        self.assertEqual(self.city_1.journal_set.all().count(), 3)
         self.assertEqual(response.status_code, 302)
+
+    def test_gget_or_update_journals_update_method(self):
+        with self.assertRaises(BadRequest) as ctx:
+            request = self.factory.get('get_or_update_journals')
+            request.user = self.user
+            request.method = "PUT"
+            response = get_or_update_journals(request, self.city_1.city_code)
+        expected_msg = BadRequest()
+        self.assertEquals(type(ctx.exception), type(expected_msg))
 
     def test_abs_url_city(self):
         path = self.city_1.get_absolute_url()
         request = self.factory.get(path)
         request.user = self.user
-        response = get_journals(request, city_id=self.city_1.pk)
+        response = get_or_update_journals(request, city_code=self.city_1.city_code)
         self.assertEqual(response.status_code, 200)
 
     # def test_abs_url_journal(self):

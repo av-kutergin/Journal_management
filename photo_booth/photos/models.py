@@ -19,6 +19,47 @@ def photo_path(instance, filename):
     return f'{city_code}/{city_code}.{get_photo_number(instance)[0]}{file_extension}'
 
 
+def get_photo_number(instance):
+    instance_journal = Journal.objects.get(pk=instance.journal_id)
+    photos = Photo.objects.filter(journal=instance_journal)
+
+    photo_numbers_in_journal = set()
+    for photo in photos:
+        if photo != instance and photo.photo_name:
+            photo_numbers_in_journal.add(int(photo.photo_name.split('.')[-1]))
+
+    first_page, last_page = map(int, instance_journal.journal_name.split('-'))
+    if instance.photo_name:
+        photo_number = int(instance.photo_name.split('.')[-1])
+        page_in_journal = photo_number - first_page + 1
+        return photo_number, page_in_journal
+
+    if photo_numbers_in_journal:
+        photo_number = max(photo_numbers_in_journal) + 1
+        return photo_number, photo_number - first_page + 1
+
+    return first_page, 1
+
+
+def define_journal_pages(instance):
+    all_journals = Journal.objects.filter(journal_city=instance.journal_city)
+    journals_in_city = set()
+    for journal in all_journals:
+        if journal != instance:
+            journals_in_city.add(int(journal.journal_name.split('-')[-1]))
+
+    if instance.journal_name:
+        first_page, last_page = map(int, instance.journal_name.split('-'))
+        return first_page, last_page
+
+    if journals_in_city:
+        first_page = max(journals_in_city) + 1
+        last_page = first_page + TOTAL_PAGES - 1
+        return first_page, last_page
+
+    return 1, TOTAL_PAGES
+
+
 class City(models.Model):
     city_name = models.CharField(max_length=20, db_index=True, verbose_name='Город')
     city_code = models.IntegerField(verbose_name='Код города', null=False, default=0, unique=True)
@@ -33,7 +74,7 @@ class City(models.Model):
         return f'{self.city_code}: {self.city_name}'
 
     def get_absolute_url(self):
-        return reverse('journal', kwargs={'city_id': self.pk})
+        return reverse('journal', kwargs={'city_code': self.city_code})
 
     def get_city_code_url(self):
         return reverse('registry', kwargs={'city_code': self.city_code})
@@ -59,8 +100,19 @@ class Journal(models.Model):
         self.filled_pages = len(Photo.objects.filter(journal=self))
         self.save(update_fields=['filled_pages'])
 
-    def get_absolute_url(self):
-        return reverse('journal', kwargs={'journal_id': self.pk})
+    @staticmethod
+    def get_last_journal(city):
+        journals = Journal.objects.filter(journal_city=city)
+        first_journal_pages = set(int(journal.journal_name.split('-')[0]) for journal in journals)
+        last_journal = journals.get(
+            journal_name=f'{max(first_journal_pages)}-{max(first_journal_pages) + TOTAL_PAGES - 1}')
+        last_journal_photos = last_journal.photo_set.all()
+        if last_journal_photos.count() == last_journal.total_pages:
+            return None
+        return last_journal
+
+    # def get_absolute_url(self):
+    #     return reverse('journal', kwargs={'journal_name': self.journal_name})
 
     def clean(self):
         if not self.journal_name:
@@ -108,7 +160,7 @@ class Photo(models.Model):
 
     def get_absolute_url(self):
         return reverse('furthermore',
-                       kwargs={'city_code': self.journal.journal_city.city_code, 'journal_id': self.journal_id,
+                       kwargs={'city_code': self.journal.journal_city.city_code, 'journal_name': self.journal.journal_name,
                                'photo_id': self.pk})
 
     def clean(self):
@@ -170,25 +222,6 @@ def update_journal(sender, instance, created, **kwargs):
     post_save.connect(update_journal, sender=Journal)
 
 
-def define_journal_pages(instance):
-    all_journals = Journal.objects.filter(journal_city=instance.journal_city)
-    journals_in_city = set()
-    for journal in all_journals:
-        if journal != instance:
-            journals_in_city.add(int(journal.journal_name.split('-')[-1]))
-
-    if instance.journal_name:
-        first_page, last_page = map(int, instance.journal_name.split('-'))
-        return first_page, last_page
-
-    if journals_in_city:
-        first_page = max(journals_in_city) + 1
-        last_page = first_page + TOTAL_PAGES - 1
-        return first_page, last_page
-
-    return 1, TOTAL_PAGES
-
-
 @receiver(post_save, sender=Photo)
 def update_photo_values(sender, instance, **kwargs):
     instance.clean()
@@ -210,28 +243,6 @@ def update_photo_values(sender, instance, **kwargs):
     instance.save()
     post_save.connect(update_photo_values, sender=Photo)
     journal.update_values()
-
-
-def get_photo_number(instance):
-    instance_journal = Journal.objects.get(pk=instance.journal_id)
-    photos = Photo.objects.filter(journal=instance_journal)
-
-    photo_numbers_in_journal = set()
-    for photo in photos:
-        if photo != instance and photo.photo_name:
-            photo_numbers_in_journal.add(int(photo.photo_name.split('.')[-1]))
-
-    first_page, last_page = map(int, instance_journal.journal_name.split('-'))
-    if instance.photo_name:
-        photo_number = int(instance.photo_name.split('.')[-1])
-        page_in_journal = photo_number - first_page + 1
-        return photo_number, page_in_journal
-
-    if photo_numbers_in_journal:
-        photo_number = max(photo_numbers_in_journal) + 1
-        return photo_number, photo_number - first_page + 1
-
-    return first_page, 1
 
 
 @receiver(models.signals.post_delete, sender=Photo)

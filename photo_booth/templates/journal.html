@@ -39,7 +39,7 @@ background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 
                       <label for="formFile" class="form-label my-3">Загрузить новое фото:</label>
                           <input name="image" class="form-control" type="file" accept="image/*" onchange="loadFile(event)">
                           <br>
-                          <p><img id="output" width="400"/></p>
+                          <p><img id="output" width="400" src=''/></p>
                           <script>
                               var loadFile = function(event) {
                                   var image = document.getElementById('output');
