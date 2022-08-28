@@ -128,16 +128,16 @@ class ViewsTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_get_journals_POST_new_journal(self):
-        for i in range(32):
-            photo = Photo.objects.create(journal=self.journal, photo_image=self.get_image_file())
+        journal1 = Journal.objects.create(journal_city=self.city_1, journal_owner=self.user, journal_name='100-132')
+        for i in range(33):
+            photo = Photo.objects.create(journal=journal1, photo_image=self.get_image_file())
             photo.save()
-        file = self.get_image_file()
         request = self.factory.post(path='get_journals', data={'image': self.get_image_file()})
         request.user = self.user
         add_session_to_request(request)
         add_messages_to_request(request)
         response = get_journals(request, self.city_1.pk)
-        self.assertEqual(len(self.city_1.journal_set.all()), 2)
+        self.assertEqual(len(self.city_1.journal_set.all()), 3)
         self.assertEqual(response.status_code, 302)
 
     def test_abs_url_city(self):

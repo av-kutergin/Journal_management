@@ -108,7 +108,7 @@ class ModelTests(TestCase):
         self.photo1.delete()
         self.assertFalse(os.path.exists(path))
 
-    def test_journal_clean_method_all(self):
+    def test_journal_clean_method_true(self):
         journal6 = Journal.objects.create(journal_city=self.city1, journal_owner=self.user, journal_name='')
         self.assertTrue(self.journal2.clean())
         self.assertTrue(journal6.clean())
@@ -122,7 +122,7 @@ class ModelTests(TestCase):
 
     def test_journal_clean_method_wrong_input_2(self):
         with self.assertRaises(ValidationError) as ctx:
-            self.journal2.journal_name ='1-69'
+            self.journal2.journal_name ='1-66'
             self.journal2.save()
         expected_msg = ValidationError({'journal_name': ['Неверный интервал.']})
         self.assertEquals(ctx.exception, expected_msg)
