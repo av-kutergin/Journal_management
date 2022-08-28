@@ -7,8 +7,10 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.urls import reverse
 from django.dispatch import receiver
+from django.utils.module_loading import import_string
+from decouple import config
 
-from photo_booth.settings import BASE_DIR, MEDIA_ROOT, STATIC_ROOT
+MEDIA_ROOT = import_string(f'{config("DJANGO_SETTINGS_MODULE")}.MEDIA_ROOT')
 
 TOTAL_PAGES = 33
 
