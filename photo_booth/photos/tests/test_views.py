@@ -7,7 +7,7 @@ from decouple import config
 
 MEDIA_ROOT = import_string(f'{config("DJANGO_SETTINGS_MODULE")}.MEDIA_ROOT')
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'photo_booth.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'photo_booth.settings_debug')
 import django
 
 django.setup()

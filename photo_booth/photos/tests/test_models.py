@@ -2,6 +2,8 @@ import os
 
 import shutil
 from io import BytesIO
+from random import randrange
+
 from PIL import Image
 
 from django.test import TestCase
@@ -11,23 +13,14 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
 from photos.models import City, Journal, Photo
-from photo_booth.settings import MEDIA_ROOT
+from photo_booth.settings_debug import MEDIA_ROOT
 
 
-# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'photo_booth.settings')
-# import django
-#
-# django.setup()
-
-
-TEST_DIR = 'test_data'
-
-
-# @override_settings(MEDIA_ROOT=(TEST_DIR + '/media'))
 class ModelTests(TestCase):
     @staticmethod
-    def get_image_file(name='test.png', ext='png', size=(50, 50), color=(256, 0, 0)):
+    def get_image_file(name='test.png', ext='png', size=(50, 50), color=(0, 0, 0)):
         file_obj = BytesIO()
+        color = (randrange(1, 257), randrange(1, 257), randrange(1, 257))
         image = Image.new("RGBA", size=size, color=color)
         image.save(file_obj, ext)
         file_obj.seek(0)
@@ -85,8 +78,9 @@ class ModelTests(TestCase):
         self.assertEqual(prev_len2, len(self.journal2.photo_set.all()))
 
     def test_journal_update_values(self):
-        journal3 = Journal.objects.create(journal_city=self.city2, journal_owner=self.user)
-        journal4 = Journal.objects.create(journal_city=self.city2, journal_owner=self.user)
+        city5 = City.objects.create(id=5, city_name='City4', city_code=55555555)
+        journal3 = Journal.objects.create(journal_city=city5, journal_owner=self.user)
+        journal4 = Journal.objects.create(journal_city=city5, journal_owner=self.user)
         self.assertEqual(journal3.filled_pages, journal3.photo_set.all().count())
         Photo.objects.create(journal=journal3, photo_image=self.get_image_file())
         Photo.objects.create(journal=journal3, photo_image=self.get_image_file())
@@ -105,6 +99,25 @@ class ModelTests(TestCase):
         path = self.photo1.photo_image.path
         self.photo1.delete()
         self.assertFalse(os.path.exists(path))
+
+    def test_new_photo_occupies_deleted_photo_path(self):
+        city4 = City.objects.create(id=4, city_name='City4', city_code=44444444)
+        journal7 = Journal.objects.create(journal_city=city4, journal_owner=self.user)
+        for i in range(33):
+            Photo.objects.create(journal=journal7, photo_image=self.get_image_file())
+        photo8 = journal7.photo_set.get(photo_name='44444444.21')
+        old_photo_name = photo8.photo_name
+        old_photo_path = photo8.photo_image.path
+        old_photo_time_create = os.path.getmtime(old_photo_path)
+        photo8.delete()
+        self.assertFalse(os.path.exists(old_photo_path))
+        photo9 = Photo.objects.create(journal=journal7, photo_image=self.get_image_file(), photo_name='44444444.21')
+        new_photo_name = photo9.photo_name
+        new_photo_path = photo9.photo_image.path
+        new_photo_time_create = os.path.getmtime(new_photo_path)
+        self.assertEqual(old_photo_name, new_photo_name)
+        self.assertEqual(old_photo_path, new_photo_path)
+        self.assertNotEqual(old_photo_time_create, new_photo_time_create)
 
     def test_journal_clean_method_true(self):
         journal6 = Journal.objects.create(journal_city=self.city1, journal_owner=self.user, journal_name='')
@@ -151,7 +164,8 @@ class ModelTests(TestCase):
 
     def test_photo_clean_method_wrong_input_3(self):
         with self.assertRaises(ValidationError) as ctx:
-            Photo.objects.create(journal=self.journal2, photo_image=self.get_image_file(), photo_name='1')
+            self.photo2.photo_name = '1'
+            self.photo2.save()
         expected_msg = ValidationError({'photo_name': ['Фотография с таким номером уже существует.']})
         self.assertEquals(ctx.exception, expected_msg)
 
@@ -162,6 +176,7 @@ def tearDownModule():
         shutil.rmtree(os.path.join(MEDIA_ROOT, '11111111'))
         shutil.rmtree(os.path.join(MEDIA_ROOT, '22222222'))
         shutil.rmtree(os.path.join(MEDIA_ROOT, '33333333'))
-        shutil.rmtree(TEST_DIR)
+        shutil.rmtree(os.path.join(MEDIA_ROOT, '44444444'))
+        shutil.rmtree(os.path.join(MEDIA_ROOT, '55555555'))
     except OSError:
         pass
